@@ -1,0 +1,14 @@
+{
+  "name": "api-server",
+  "version": "1.0.0",
+  "description": "a server for all apis for my portfolio",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "muditdahiya",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^8.11.1"
+  }
+}
