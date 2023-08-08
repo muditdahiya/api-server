@@ -45,9 +45,31 @@ app.post("/updateDemographic", async (req, res) => {
   );
   const country = locationResponse.data.country_name;
   //update table using sql
-  pool.query(
-    `INSERT INTO demographic (country, count) VALUES ('${country}', 1) ON CONFLICT (country) DO UPDATE SET count = demographic.count + 1;`
-  );
+  //avoiding bots from US, allow only one increment in 30 minutes from USA
+  if (country === "United States of America") {
+    let lastTime = await pool.query(
+      `SELECT update_time FROM demographic WHERE country = 'United States of America';`
+    );
+    lastTime = lastTime.rows[0].update_time;
+    lastTime = `${lastTime.getUTCFullYear()}-${
+      lastTime.getUTCMonth() + 1
+    }-${lastTime.getUTCDate()} ${lastTime.getUTCHours()}:${lastTime.getUTCMinutes()}:${lastTime.getUTCSeconds()}`;
+    let timeInMinutes = await pool.query(
+      `SELECT 24*60*date_part('days', now() - '${lastTime}') + 60*date_part('hours', now() - '${lastTime}') + date_part('minutes', now() - '${lastTime}') as minutes;`
+    );
+    timeInMinutes = timeInMinutes.rows[0].minutes;
+    if (timeInMinutes > 30) {
+      await pool.query(
+        `INSERT INTO demographic (country, count, update_time) VALUES ('${country}', 1, now()) ON CONFLICT (country) DO UPDATE SET count = demographic.count + 1, update_time = now();`
+      );
+    }
+    //any other country registers all hits
+  } else {
+    await pool.query(
+      `INSERT INTO demographic (country, count, update_time) VALUES ('${country}', 1, now()) ON CONFLICT (country) DO UPDATE SET count = demographic.count + 1, update_time = now();`
+    );
+  }
+
   res.send(country);
 });
 
