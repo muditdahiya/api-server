@@ -43,12 +43,12 @@ app.post("/updateDemographic", async (req, res) => {
   const locationResponse = await axios.get(
     `https://api.ip2location.io/?key=${process.env.LOCATION_API_KEY}&ip=${ip}`
   );
-  const country = locationResponse.data.country_name;
+  const country = locationResponse.data.country_code;
   //update table using sql
   //avoiding bots from US, allow only one increment in 240 minutes from US
-  if (country === "United States of America") {
+  if (country === "US") {
     let lastTime = await pool.query(
-      `SELECT update_time FROM demographic WHERE country = 'United States of America';`
+      `SELECT update_time FROM demographic WHERE country = 'US';`
     );
     lastTime = lastTime.rows[0].update_time;
     lastTime = `${lastTime.getUTCFullYear()}-${
